@@ -16,15 +16,21 @@
     overflow-x: auto; 
     overflow-y: hidden; 
     -webkit-tap-highlight-color: transparent; }
-        .piano { display: flex; 
+        .piano {display: flex; 
     position: relative; 
     padding: 20px 10px; 
-    /* This margin auto will center the piano ONLY if it fits on the screen */
     margin: 0 auto; 
     width: fit-content; 
-    min-width: max-content; /* Ensures the piano doesn't "squish" */
-    user-select: none; }
-        .key { border: 1px solid #000; box-sizing: border-box; cursor: pointer; position: relative; }
+    min-width: max-content;
+    user-select: none;
+    /* FIX: This forces the phone's GPU to handle the piano movement */
+    will-change: transform; }
+        .key { border: 1px solid #000; 
+    box-sizing: border-box; 
+    cursor: pointer; 
+    position: relative;
+    /* FIX: Tells the browser to handle scrolling normally on the keys */
+    touch-action: pan-x; }
         .white { width: 40px; height: 160px; background: white; border-radius: 0 0 5px 5px; z-index: 1; }
         .white.active { background: #00d4ff !important; box-shadow: inset 0 0 15px rgba(0, 212, 255, 0.7); }
         .black { width: 28px; height: 100px; background: #111 !important; margin-left: -14px; margin-right: -14px; z-index: 2; border-radius: 0 0 3px 3px; }
@@ -102,7 +108,7 @@
     }
 
     function startNote(e) {
-        if (e.type === 'touchstart') e.preventDefault();
+        if (e.type === 'touchstart');
         const key = e.currentTarget;
         if(!key.classList.contains('active')) {
             key.classList.add('active');
@@ -116,7 +122,7 @@
 
     keys.forEach(k => {
         k.addEventListener('mousedown', startNote);
-        k.addEventListener('touchstart', startNote, {passive: false});
+        k.addEventListener('touchstart', startNote, {passive: true});
         ['mouseup', 'mouseleave', 'touchend'].forEach(type => k.addEventListener(type, endNote));
     });
 </script>
