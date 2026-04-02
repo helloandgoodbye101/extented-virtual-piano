@@ -9,7 +9,6 @@
     padding: 0; 
     background: #ffffff; 
     display: flex; 
-    /* Changed from center to flex-start to fix the left-side cutoff */
     justify-content: flex-start; 
     align-items: flex-start; 
     height: 100vh; 
@@ -23,19 +22,16 @@
     width: fit-content; 
     min-width: max-content;
     user-select: none;
-    /* FIX: This forces the phone's GPU to handle the piano movement */
     will-change: transform; }
         .key { border: 1px solid #000; 
     box-sizing: border-box; 
     cursor: pointer; 
     position: relative;
-    /* FIX: Tells the browser to handle scrolling normally on the keys */
     touch-action: pan-x; }
         .white { width: 40px; height: 160px; background: white; border-radius: 0 0 5px 5px; z-index: 1; }
         .white.active { background: #00d4ff !important; box-shadow: inset 0 0 15px rgba(0, 212, 255, 0.7); }
         .black { width: 28px; height: 100px; background: #111 !important; margin-left: -14px; margin-right: -14px; z-index: 2; border-radius: 0 0 3px 3px; }
         .black.active { background: #ff007f !important; box-shadow: inset 0 0 15px rgba(255, 0, 127, 0.7); }
-        /* Labels are removed from CSS to ensure a clean look */
         @media screen and (orientation: landscape) { .white { height: 110px; } .black { height: 70px; } }
     </style>
 </head>
@@ -84,31 +80,27 @@
         if (audioCtx.state === 'suspended') audioCtx.resume();
 
         const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
         const gainNode = audioCtx.createGain();
+        
+        osc.connect(gainNode);
         gainNode.connect(audioCtx.destination);
-
-        const oscs = [
-            {type: 'sine', vol: 0.15},
-            {type: 'triangle', vol: 0.1}
-        ].map(config => {
-            const osc = audioCtx.createOscillator();
-            osc.type = config.type;
-            osc.frequency.setValueAtTime(frequency, now);
-            osc.connect(gainNode);
-            osc.start(now);
-            osc.stop(now + 0.8);
-            return osc;
-        });
-
-        gainNode.gain.cancelScheduledValues(now);
-        gainNode.gain.setValueAtTime(0, now);
-        gainNode.gain.linearRampToValueAtTime(0.2, now + 0.02); 
-        gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.6); 
-        gainNode.gain.linearRampToValueAtTime(0, now + 0.65); 
+        
+        osc.frequency.value = frequency;
+        osc.type = 'triangle'; 
+        
+        gainNode.gain.setValueAtTime(1.0, now);
+        
+        gainNode.gain.linearRampToValueAtTime(0.8, now + 0.05);
+        // CHANGED: Sustain is now exactly 1.5 seconds
+        gainNode.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
+        
+        osc.start(now);
+        // CHANGED: Stop time is now 1.5 seconds
+        osc.stop(now + 1.5);
     }
 
     function startNote(e) {
-        if (e.type === 'touchstart');
         const key = e.currentTarget;
         if(!key.classList.contains('active')) {
             key.classList.add('active');
@@ -121,10 +113,4 @@
     }
 
     keys.forEach(k => {
-        k.addEventListener('mousedown', startNote);
-        k.addEventListener('touchstart', startNote, {passive: true});
-        ['mouseup', 'mouseleave', 'touchend'].forEach(type => k.addEventListener(type, endNote));
-    });
-</script>
-</body>
-</html>
+        k.addEventListener('mousedown', start
