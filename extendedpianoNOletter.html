@@ -66,6 +66,7 @@
 <script>
     const keys = document.querySelectorAll('.key');
     let audioCtx;
+    let lastTouchTime = 0; // Fixes the double-play ghost click bug
     
     const freqMap = { 
         "F3": 174.61, "F#3": 185.00, "G3": 196.00, "G#3": 207.65, "A3": 220.00, "A#3": 233.08, "B3": 246.94,
@@ -90,17 +91,26 @@
         osc.type = 'triangle'; 
         
         gainNode.gain.setValueAtTime(1.0, now);
-        
         gainNode.gain.linearRampToValueAtTime(0.8, now + 0.05);
-        // CHANGED: Sustain is now exactly 1.5 seconds
         gainNode.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
         
         osc.start(now);
-        // CHANGED: Stop time is now 1.5 seconds
         osc.stop(now + 1.5);
     }
 
     function startNote(e) {
+        // GHOST CLICK FIX: 
+        // If it's a touch, record the time.
+        if (e.type === 'touchstart') {
+            lastTouchTime = Date.now();
+        } 
+        // If it's a mouse click happening within 500ms of a touch, IGNORE IT.
+        else if (e.type === 'mousedown') {
+            if (Date.now() - lastTouchTime < 500) {
+                return; 
+            }
+        }
+
         const key = e.currentTarget;
         if(!key.classList.contains('active')) {
             key.classList.add('active');
@@ -114,6 +124,7 @@
 
     keys.forEach(k => {
         k.addEventListener('mousedown', startNote);
+        // Passive true allows the page to still scroll smoothly side-to-side
         k.addEventListener('touchstart', startNote, {passive: true});
         ['mouseup', 'mouseleave', 'touchend'].forEach(type => k.addEventListener(type, endNote));
     });
