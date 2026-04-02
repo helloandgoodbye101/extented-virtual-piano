@@ -113,4 +113,10 @@
     }
 
     keys.forEach(k => {
-        k.addEventListener('mousedown', start
+        k.addEventListener('mousedown', startNote);
+        k.addEventListener('touchstart', startNote, {passive: true});
+        ['mouseup', 'mouseleave', 'touchend'].forEach(type => k.addEventListener(type, endNote));
+    });
+</script>
+</body>
+</html>
